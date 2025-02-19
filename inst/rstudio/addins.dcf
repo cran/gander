@@ -1,0 +1,4 @@
+Name: gander LLM assistant
+Description: LLM assistant
+Binding: gander_addin
+Interactive: false
