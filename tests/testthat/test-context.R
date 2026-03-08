@@ -28,22 +28,31 @@ test_that("describe_variable works", {
 
 test_that("backtick_possibly works", {
   expect_equal(backtick_possibly(character(0)), character(0))
-  expect_equal(backtick_possibly("x"), c("```", "x", "```"))
-  expect_equal(backtick_possibly(c("x", "y")), c("```", "x", "y", "```"))
+  expect_equal(backtick_possibly("x"), c("`````", "x", "`````"))
+  expect_equal(backtick_possibly(c("x", "y")), c("`````", "x", "y", "`````"))
 })
 
 test_that("selected_variables works for r code", {
-  seln <- selected_variables('
+  seln <- selected_variables(
+    '
     ggplot(stackoverflow, aes(x = YearsCodedJob, y = Salary)) +
       geom_point() +
       labs(x = "Years Coded", y = "Salary")
-  ')
+  '
+  )
 
   # todo: this currently includes x and y (argument names) too
   expect_contains(
     seln,
-    c("ggplot", "stackoverflow", "aes", "YearsCodedJob",
-      "Salary", "geom_point", "labs")
+    c(
+      "ggplot",
+      "stackoverflow",
+      "aes",
+      "YearsCodedJob",
+      "Salary",
+      "geom_point",
+      "labs"
+    )
   )
 })
 

@@ -6,10 +6,19 @@ mocked_selection <- function() {
       contents = "some context",
       selection = structure(
         list(list(
-          range = structure(list(
-            start = structure(c(row = 1, column = 1), class = "document_position"),
-            end = structure(c(row = 1, column = 12), class = "document_position")
-          ), class = "document_range"),
+          range = structure(
+            list(
+              start = structure(
+                c(row = 1, column = 1),
+                class = "document_position"
+              ),
+              end = structure(
+                c(row = 1, column = 12),
+                class = "document_position"
+              )
+            ),
+            class = "document_range"
+          ),
           text = "some context"
         )),
         class = "document_selection"
@@ -27,10 +36,19 @@ mocked_empty_selection <- function() {
       contents = "some context",
       selection = structure(
         list(list(
-          range = structure(list(
-            start = structure(c(row = 1, column = 1), class = "document_position"),
-            end = structure(c(row = 1, column = 1), class = "document_position")
-          ), class = "document_range"),
+          range = structure(
+            list(
+              start = structure(
+                c(row = 1, column = 1),
+                class = "document_position"
+              ),
+              end = structure(
+                c(row = 1, column = 1),
+                class = "document_position"
+              )
+            ),
+            class = "document_range"
+          ),
           text = ""
         )),
         class = "document_selection"
@@ -41,5 +59,5 @@ mocked_empty_selection <- function() {
 }
 
 mocked_chat <- function() {
-  readRDS(system.file("chat/chat.rds", package = "gander"))
+  ellmer::chat_openai_compatible("https://example.org", model = "test")
 }

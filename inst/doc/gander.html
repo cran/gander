@@ -48,8 +48,9 @@ overflow: visible;
 }
 </style>
 <style type="text/css" data-origin="pandoc">
+html { -webkit-text-size-adjust: 100%; }
 pre > code.sourceCode { white-space: pre; position: relative; }
-pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
 pre > code.sourceCode > span:empty { height: 1.2em; }
 .sourceCode { overflow: visible; }
 code.sourceCode > span { color: inherit; text-decoration: inherit; }
@@ -60,7 +61,7 @@ div.sourceCode { overflow: auto; }
 }
 @media print {
 pre > code.sourceCode { white-space: pre-wrap; }
-pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
 }
 pre.numberSource code
 { counter-reset: source-line 0; }
@@ -374,12 +375,14 @@ for use with gander, you’ll want to the use the most performant model
 possible that satisfies your privacy needs; gander automatically passes
 along your code and the objects in your R environment to your chosen
 model, so it’s especially important to consider data privacy when using
-LLMs with gander.</p>
-<p>gander uses the <code>.gander_chat</code> option to configure which
+LLMs with gander. To learn more about how we think about LLM tools and
+privacy, see the Posit blog post <a href="https://posit.co/blog/trust-llm-tools/">Privacy and AI
+Assistants</a>.</p>
+<p>gander uses the <code>gander.chat</code> option to configure which
 model powers the addin; just set the option to whatever your usual
 ellmer setup is. For example, to use Anthropic’s Claude, you might write
-<code>options(.gander_chat = ellmer::chat_claude())</code>. Paste that
-code in your <code>.Rprofile</code> via
+<code>options(gander.chat = ellmer::chat_claude(model = &quot;claude-sonnet-4-6&quot;))</code>.
+Paste that code in your <code>.Rprofile</code> via
 <code>usethis::edit_r_profile()</code> to always use the same model
 every time you start an R session.</p>
 <p>If you’re using ellmer inside a organization, you’ll be limited to
@@ -390,30 +393,41 @@ big cloud provider, e.g. <code>chat_azure()</code>,
 exploration, you’ll have a lot more freedom, so we have a few
 recommendations to help you get started:</p>
 <ul>
-<li><p>As of early 2025, Anthropic’s <strong>Claude Sonnet 3.5</strong>
+<li><p>As of early 2026, Anthropic’s <strong>Claude Sonnet 4.6</strong>
 is a very powerful model for code assistance and is the model I’ve used
-while developing the package. If you want to use Claude, you’ll need to
-register an <a href="https://console.anthropic.com/">API key</a> to the
-environment variable <code>ANTHROPIC_API_KEY</code> and then set
-<code>options(.gander_chat = ellmer::chat_claude())</code>.</p></li>
-<li><p>Regarding OpenAI’s models, <code>chat_openai()</code> defaults to
-<strong>GPT-4o</strong>, but you can use
-<code>model = &quot;gpt-4o-mini&quot;</code> for a cheaper, lower-quality model,
-or <code>model = &quot;o1-mini&quot;</code> for more complex reasoning; to use an
-OpenAI model, you’ll need to set the options
-<code>options(.gander_chat = ellmer::chat_openai(model = &quot;gpt-4o&quot;))</code>
-and register your OpenAI API key with the <code>OPENAI_API_KEY</code>
-environment variable.</p></li>
-<li><p>You can use a <strong>local model</strong> with
+while developing the package. It’s fast, inexpensive, and strong at code
+tasks. If you want to use Claude, you’ll need to register an <a href="https://console.anthropic.com/">API key</a> to the environment
+variable <code>ANTHROPIC_API_KEY</code> and then set
+<code>options(gander.chat = ellmer::chat_claude(model = &quot;claude-sonnet-4-6&quot;))</code>.</p></li>
+<li><p>OpenAI’s <strong>GPT-4.1</strong> is another strong option at
+$2/$8 per million input/output tokens. To use it, register your OpenAI
+API key with the <code>OPENAI_API_KEY</code> environment variable and
+set
+<code>options(gander.chat = ellmer::chat_openai(model = &quot;gpt-4.1&quot;))</code>.</p></li>
+<li><p>Google’s <strong>Gemini 3 Flash</strong> is a fast, capable
+model. To use it, register a <a href="https://aistudio.google.com/apikey">Google AI Studio API key</a>
+to the environment variable <code>GOOGLE_API_KEY</code> and set:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">options</span>(</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>  <span class="at">gander.chat =</span> ellmer<span class="sc">::</span><span class="fu">chat_google_gemini</span>(</span>
+<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a>    <span class="at">model =</span> <span class="st">&quot;gemini-3-flash-preview&quot;</span>,</span>
+<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a>    <span class="at">api_args =</span> <span class="fu">list</span>(</span>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a>      <span class="at">generationConfig =</span> <span class="fu">list</span>(</span>
+<span id="cb1-6"><a href="#cb1-6" tabindex="-1"></a>        <span class="at">thinkingConfig =</span> <span class="fu">list</span>(<span class="at">thinkingLevel =</span> <span class="st">&quot;minimal&quot;</span>)</span>
+<span id="cb1-7"><a href="#cb1-7" tabindex="-1"></a>      )</span>
+<span id="cb1-8"><a href="#cb1-8" tabindex="-1"></a>    )</span>
+<span id="cb1-9"><a href="#cb1-9" tabindex="-1"></a>  )</span>
+<span id="cb1-10"><a href="#cb1-10" tabindex="-1"></a>)</span></code></pre></div>
+<p>Setting <code>thinkingLevel = &quot;minimal&quot;</code> is important for
+latency—without it, the default dynamic thinking roughly doubles
+response time with no quality benefit for simple code transformation
+tasks.</p></li>
+<li><p>You can also use a <strong>local model</strong> with
 <code>chat_ollama()</code>, which uses <a href="https://ollama.com">Ollama</a> and allows you to run models on
 your own computer. While the biggest models you can run locally aren’t
 as good as the state of the art hosted models, they don’t share your
 data and are effectively free. To use an ollama model, run the model
 locally and then set
-<code>options(.gander_chat = ellmer::chat_ollama(model = &quot;model-name&quot;))</code>.
-Instead of <code>model-name</code>, you’d substitute in the name of the
-model that appears when you run <code>ollama list</code> at the
-console.</p></li>
+<code>options(gander.chat = ellmer::chat_ollama(model = &quot;model-name&quot;))</code>.</p></li>
 </ul>
 </div>
 <div id="what-is-gander-actually-doing" class="section level2">
@@ -433,11 +447,11 @@ environment to the model.</li>
 </ul>
 <p>For example, imagine you’re working in a .R file that looks like
 this:</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
-<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a></span>
-<span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a><span class="fu">data</span>(<span class="st">&quot;stackoverflow&quot;</span>, <span class="at">package =</span> <span class="st">&quot;modeldata&quot;</span>)</span>
-<span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a></span>
-<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a>stackoverflow</span></code></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a><span class="fu">data</span>(<span class="st">&quot;stackoverflow&quot;</span>, <span class="at">package =</span> <span class="st">&quot;modeldata&quot;</span>)</span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a></span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a>stackoverflow</span></code></pre></div>
 <p><a href="https://modeldata.tidymodels.org/reference/stackoverflow.html">stackoverflow</a>
 is a data set containing results from the annual Stack Overflow
 Developer Survey.</p>
@@ -472,63 +486,63 @@ gander actually sent to the model. Under the hood, gander creates an <a href="ht
 and provides it a bunch of context—<code>gander_peek()</code> returns
 that chat object from your most recent interaction with gander as-is.
 So, when I do so:</p>
-<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>gander<span class="sc">::</span><span class="fu">gander_peek</span>()</span>
-<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a><span class="co">#&gt; &lt;Chat turns=3 tokens=1077/52&gt;</span></span>
-<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a><span class="co">#&gt; ── system ─────────────────────────────────────────────────────────────────────</span></span>
-<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a><span class="co">#&gt; You are a helpful but terse R data scientist. Respond only with valid R code:</span></span>
-<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a><span class="co">#&gt; no exposition, no backticks. Always provide a minimal solution and refrain</span></span>
-<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a><span class="co">#&gt; from unnecessary additions. Use tidyverse style and, when relevant, tidyverse</span></span>
-<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a><span class="co">#&gt; packages. For example, when asked to plot something, use ggplot2, or when</span></span>
-<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a><span class="co">#&gt; asked to transform data, using dplyr and/or tidyr unless explicitly instructed</span></span>
-<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a><span class="co">#&gt; otherwise.</span></span>
-<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a><span class="co">#&gt; ── user ───────────────────────────────────────────────────────────────────────</span></span>
-<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a><span class="co">#&gt; Up to this point, the contents of my r file reads:</span></span>
-<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a><span class="co">#&gt; ``` </span></span>
-<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a><span class="co">#&gt; library(ggplot2)</span></span>
-<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb2-18"><a href="#cb2-18" tabindex="-1"></a><span class="co">#&gt; data(&quot;stackoverflow&quot;, package = &quot;modeldata&quot;)</span></span>
-<span id="cb2-19"><a href="#cb2-19" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb2-20"><a href="#cb2-20" tabindex="-1"></a><span class="co">#&gt; ```</span></span>
-<span id="cb2-21"><a href="#cb2-21" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb2-22"><a href="#cb2-22" tabindex="-1"></a><span class="co">#&gt; Now, plot salary vs. years coded in the following:</span></span>
-<span id="cb2-23"><a href="#cb2-23" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb2-24"><a href="#cb2-24" tabindex="-1"></a><span class="co">#&gt; stackoverflow</span></span>
-<span id="cb2-25"><a href="#cb2-25" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb2-26"><a href="#cb2-26" tabindex="-1"></a><span class="co">#&gt; Here&#39;s some information about the objects in my R environment:</span></span>
-<span id="cb2-27"><a href="#cb2-27" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb2-28"><a href="#cb2-28" tabindex="-1"></a><span class="co">#&gt; ``` </span></span>
-<span id="cb2-29"><a href="#cb2-29" tabindex="-1"></a><span class="co">#&gt; stackoverflow </span></span>
-<span id="cb2-30"><a href="#cb2-30" tabindex="-1"></a><span class="co">#&gt; #&gt; tibble [5,594 × 21] (S3: tbl_df/tbl/data.frame) </span></span>
-<span id="cb2-31"><a href="#cb2-31" tabindex="-1"></a><span class="co">#&gt; #&gt; $ Country : Factor w/ 5 levels &quot;Canada&quot;,&quot;Germany&quot;,..: 4 5 5 2 3 5 5 2 5 2 ... </span></span>
-<span id="cb2-32"><a href="#cb2-32" tabindex="-1"></a><span class="co">#&gt; #&gt; $ Salary : num [1:5594] 100000 130000 175000 64516 6636 ... </span></span>
-<span id="cb2-33"><a href="#cb2-33" tabindex="-1"></a><span class="co">#&gt; #&gt; $ YearsCodedJob: int [1:5594] 20 20 16 4 1 1 13 4 7 17 ... </span></span>
-<span id="cb2-34"><a href="#cb2-34" tabindex="-1"></a><span class="co">#&gt; #&gt; $ OpenSource : num [1:5594] 0 1 0 0 0 0 0 1 1 1 ... </span></span>
-<span id="cb2-35"><a href="#cb2-35" tabindex="-1"></a><span class="co">#&gt; #&gt; $ Hobby : num [1:5594] 1 1 1 0 1 1 1 0 1 1 ... </span></span>
-<span id="cb2-36"><a href="#cb2-36" tabindex="-1"></a><span class="co">#&gt; #&gt; $ CompanySizeNumber : num [1:5594] 5000 1000 10000 1000 5000 20 20 5000 20 20 ... </span></span>
-<span id="cb2-37"><a href="#cb2-37" tabindex="-1"></a><span class="co">#&gt; #&gt; $ Remote : Factor w/ 2 levels &quot;Remote&quot;,&quot;Not remote&quot;: 1 1 2 2 2 2 2 2 2 2 ... </span></span>
-<span id="cb2-38"><a href="#cb2-38" tabindex="-1"></a><span class="co">#&gt; #&gt; $ CareerSatisfaction : int [1:5594] 8 9 7 9 5 8 7 7 8 9 ... </span></span>
-<span id="cb2-39"><a href="#cb2-39" tabindex="-1"></a><span class="co">#&gt; #&gt; $ Data_scientist : num [1:5594] 0 0 0 0 0 0 0 0 0 0 ... </span></span>
-<span id="cb2-40"><a href="#cb2-40" tabindex="-1"></a><span class="co">#&gt; #&gt; $ Database_administrator : num [1:5594] 0 0 0 0 0 0 0 0 0 0 ... </span></span>
-<span id="cb2-41"><a href="#cb2-41" tabindex="-1"></a><span class="co">#&gt; #&gt; $ Desktop_applications_developer : num [1:5594] 0 0 0 0 0 0 0 0 1 1 ... </span></span>
-<span id="cb2-42"><a href="#cb2-42" tabindex="-1"></a><span class="co">#&gt; #&gt; $ Developer_with_stats_math_background: num [1:5594] 0 0 0 0 0 0 0 0 0 1 ... </span></span>
-<span id="cb2-43"><a href="#cb2-43" tabindex="-1"></a><span class="co">#&gt; #&gt; $ DevOps : num [1:5594] 0 1 0 0 0 0 0 0 0 0 ... </span></span>
-<span id="cb2-44"><a href="#cb2-44" tabindex="-1"></a><span class="co">#&gt; #&gt; $ Embedded_developer : num [1:5594] 1 1 0 0 0 0 0 0 0 0 ... </span></span>
-<span id="cb2-45"><a href="#cb2-45" tabindex="-1"></a><span class="co">#&gt; #&gt; $ Graphic_designer : num [1:5594] 0 0 0 0 0 0 0 0 0 0 ... </span></span>
-<span id="cb2-46"><a href="#cb2-46" tabindex="-1"></a><span class="co">#&gt; #&gt; $ Graphics_programming : num [1:5594] 0 0 0 0 0 0 0 0 0 0... </span></span>
-<span id="cb2-47"><a href="#cb2-47" tabindex="-1"></a><span class="co">#&gt; #&gt; $ Machine_learning_specialist : num [1:5594] 0 0 0 0 0 0 0 0 0 0 ... </span></span>
-<span id="cb2-48"><a href="#cb2-48" tabindex="-1"></a><span class="co">#&gt; #&gt; $ Mobile_developer : num [1:5594] 0 0 0 0 0 0 0 0 1 0 ... </span></span>
-<span id="cb2-49"><a href="#cb2-49" tabindex="-1"></a><span class="co">#&gt; #&gt; $ Quality_assurance_engineer : num [1:5594] 0 1 0 0 0 0 0 0 0 0 ... </span></span>
-<span id="cb2-50"><a href="#cb2-50" tabindex="-1"></a><span class="co">#&gt; #&gt; $ Systems_administrator : num [1:5594] 0 0 0 0 0 0 0 0 0 0 ... </span></span>
-<span id="cb2-51"><a href="#cb2-51" tabindex="-1"></a><span class="co">#&gt; #&gt; $ Web_developer : num [1:5594] 0 1 1 1 1 1 1 1 0 0 ...</span></span>
-<span id="cb2-52"><a href="#cb2-52" tabindex="-1"></a><span class="co">#&gt; ```</span></span>
-<span id="cb2-53"><a href="#cb2-53" tabindex="-1"></a><span class="co">#&gt; </span></span>
-<span id="cb2-54"><a href="#cb2-54" tabindex="-1"></a><span class="co">#&gt; ── assistant ──────────────────────────────────────────────────────────────────</span></span>
-<span id="cb2-55"><a href="#cb2-55" tabindex="-1"></a><span class="co">#&gt; ggplot(stackoverflow, aes(x = YearsCodedJob, y = Salary)) + </span></span>
-<span id="cb2-56"><a href="#cb2-56" tabindex="-1"></a><span class="co">#&gt;   geom_point() +</span></span>
-<span id="cb2-57"><a href="#cb2-57" tabindex="-1"></a><span class="co">#&gt;   labs(x = &quot;Years Coded&quot;, y = &quot;Salary&quot;)</span></span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>gander<span class="sc">::</span><span class="fu">gander_peek</span>()</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a><span class="co">#&gt; &lt;Chat turns=3 tokens=1077/52&gt;</span></span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a><span class="co">#&gt; ── system ─────────────────────────────────────────────────────────────────────</span></span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a><span class="co">#&gt; You are a helpful but terse R data scientist. Respond only with valid R code:</span></span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a><span class="co">#&gt; no exposition, no backticks. Always provide a minimal solution and refrain</span></span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a><span class="co">#&gt; from unnecessary additions. Use tidyverse style and, when relevant, tidyverse</span></span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a><span class="co">#&gt; packages. For example, when asked to plot something, use ggplot2, or when</span></span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a><span class="co">#&gt; asked to transform data, using dplyr and/or tidyr unless explicitly instructed</span></span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a><span class="co">#&gt; otherwise.</span></span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a><span class="co">#&gt; ── user ───────────────────────────────────────────────────────────────────────</span></span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a><span class="co">#&gt; Up to this point, the contents of my r file reads:</span></span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-15"><a href="#cb3-15" tabindex="-1"></a><span class="co">#&gt; ``` </span></span>
+<span id="cb3-16"><a href="#cb3-16" tabindex="-1"></a><span class="co">#&gt; library(ggplot2)</span></span>
+<span id="cb3-17"><a href="#cb3-17" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-18"><a href="#cb3-18" tabindex="-1"></a><span class="co">#&gt; data(&quot;stackoverflow&quot;, package = &quot;modeldata&quot;)</span></span>
+<span id="cb3-19"><a href="#cb3-19" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-20"><a href="#cb3-20" tabindex="-1"></a><span class="co">#&gt; ```</span></span>
+<span id="cb3-21"><a href="#cb3-21" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-22"><a href="#cb3-22" tabindex="-1"></a><span class="co">#&gt; Now, plot salary vs. years coded in the following:</span></span>
+<span id="cb3-23"><a href="#cb3-23" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-24"><a href="#cb3-24" tabindex="-1"></a><span class="co">#&gt; stackoverflow</span></span>
+<span id="cb3-25"><a href="#cb3-25" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-26"><a href="#cb3-26" tabindex="-1"></a><span class="co">#&gt; Here&#39;s some information about the objects in my R environment:</span></span>
+<span id="cb3-27"><a href="#cb3-27" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-28"><a href="#cb3-28" tabindex="-1"></a><span class="co">#&gt; ``` </span></span>
+<span id="cb3-29"><a href="#cb3-29" tabindex="-1"></a><span class="co">#&gt; stackoverflow </span></span>
+<span id="cb3-30"><a href="#cb3-30" tabindex="-1"></a><span class="co">#&gt; #&gt; tibble [5,594 × 21] (S3: tbl_df/tbl/data.frame) </span></span>
+<span id="cb3-31"><a href="#cb3-31" tabindex="-1"></a><span class="co">#&gt; #&gt; $ Country : Factor w/ 5 levels &quot;Canada&quot;,&quot;Germany&quot;,..: 4 5 5 2 3 5 5 2 5 2 ... </span></span>
+<span id="cb3-32"><a href="#cb3-32" tabindex="-1"></a><span class="co">#&gt; #&gt; $ Salary : num [1:5594] 100000 130000 175000 64516 6636 ... </span></span>
+<span id="cb3-33"><a href="#cb3-33" tabindex="-1"></a><span class="co">#&gt; #&gt; $ YearsCodedJob: int [1:5594] 20 20 16 4 1 1 13 4 7 17 ... </span></span>
+<span id="cb3-34"><a href="#cb3-34" tabindex="-1"></a><span class="co">#&gt; #&gt; $ OpenSource : num [1:5594] 0 1 0 0 0 0 0 1 1 1 ... </span></span>
+<span id="cb3-35"><a href="#cb3-35" tabindex="-1"></a><span class="co">#&gt; #&gt; $ Hobby : num [1:5594] 1 1 1 0 1 1 1 0 1 1 ... </span></span>
+<span id="cb3-36"><a href="#cb3-36" tabindex="-1"></a><span class="co">#&gt; #&gt; $ CompanySizeNumber : num [1:5594] 5000 1000 10000 1000 5000 20 20 5000 20 20 ... </span></span>
+<span id="cb3-37"><a href="#cb3-37" tabindex="-1"></a><span class="co">#&gt; #&gt; $ Remote : Factor w/ 2 levels &quot;Remote&quot;,&quot;Not remote&quot;: 1 1 2 2 2 2 2 2 2 2 ... </span></span>
+<span id="cb3-38"><a href="#cb3-38" tabindex="-1"></a><span class="co">#&gt; #&gt; $ CareerSatisfaction : int [1:5594] 8 9 7 9 5 8 7 7 8 9 ... </span></span>
+<span id="cb3-39"><a href="#cb3-39" tabindex="-1"></a><span class="co">#&gt; #&gt; $ Data_scientist : num [1:5594] 0 0 0 0 0 0 0 0 0 0 ... </span></span>
+<span id="cb3-40"><a href="#cb3-40" tabindex="-1"></a><span class="co">#&gt; #&gt; $ Database_administrator : num [1:5594] 0 0 0 0 0 0 0 0 0 0 ... </span></span>
+<span id="cb3-41"><a href="#cb3-41" tabindex="-1"></a><span class="co">#&gt; #&gt; $ Desktop_applications_developer : num [1:5594] 0 0 0 0 0 0 0 0 1 1 ... </span></span>
+<span id="cb3-42"><a href="#cb3-42" tabindex="-1"></a><span class="co">#&gt; #&gt; $ Developer_with_stats_math_background: num [1:5594] 0 0 0 0 0 0 0 0 0 1 ... </span></span>
+<span id="cb3-43"><a href="#cb3-43" tabindex="-1"></a><span class="co">#&gt; #&gt; $ DevOps : num [1:5594] 0 1 0 0 0 0 0 0 0 0 ... </span></span>
+<span id="cb3-44"><a href="#cb3-44" tabindex="-1"></a><span class="co">#&gt; #&gt; $ Embedded_developer : num [1:5594] 1 1 0 0 0 0 0 0 0 0 ... </span></span>
+<span id="cb3-45"><a href="#cb3-45" tabindex="-1"></a><span class="co">#&gt; #&gt; $ Graphic_designer : num [1:5594] 0 0 0 0 0 0 0 0 0 0 ... </span></span>
+<span id="cb3-46"><a href="#cb3-46" tabindex="-1"></a><span class="co">#&gt; #&gt; $ Graphics_programming : num [1:5594] 0 0 0 0 0 0 0 0 0 0... </span></span>
+<span id="cb3-47"><a href="#cb3-47" tabindex="-1"></a><span class="co">#&gt; #&gt; $ Machine_learning_specialist : num [1:5594] 0 0 0 0 0 0 0 0 0 0 ... </span></span>
+<span id="cb3-48"><a href="#cb3-48" tabindex="-1"></a><span class="co">#&gt; #&gt; $ Mobile_developer : num [1:5594] 0 0 0 0 0 0 0 0 1 0 ... </span></span>
+<span id="cb3-49"><a href="#cb3-49" tabindex="-1"></a><span class="co">#&gt; #&gt; $ Quality_assurance_engineer : num [1:5594] 0 1 0 0 0 0 0 0 0 0 ... </span></span>
+<span id="cb3-50"><a href="#cb3-50" tabindex="-1"></a><span class="co">#&gt; #&gt; $ Systems_administrator : num [1:5594] 0 0 0 0 0 0 0 0 0 0 ... </span></span>
+<span id="cb3-51"><a href="#cb3-51" tabindex="-1"></a><span class="co">#&gt; #&gt; $ Web_developer : num [1:5594] 0 1 1 1 1 1 1 1 0 0 ...</span></span>
+<span id="cb3-52"><a href="#cb3-52" tabindex="-1"></a><span class="co">#&gt; ```</span></span>
+<span id="cb3-53"><a href="#cb3-53" tabindex="-1"></a><span class="co">#&gt; </span></span>
+<span id="cb3-54"><a href="#cb3-54" tabindex="-1"></a><span class="co">#&gt; ── assistant ──────────────────────────────────────────────────────────────────</span></span>
+<span id="cb3-55"><a href="#cb3-55" tabindex="-1"></a><span class="co">#&gt; ggplot(stackoverflow, aes(x = YearsCodedJob, y = Salary)) + </span></span>
+<span id="cb3-56"><a href="#cb3-56" tabindex="-1"></a><span class="co">#&gt;   geom_point() +</span></span>
+<span id="cb3-57"><a href="#cb3-57" tabindex="-1"></a><span class="co">#&gt;   labs(x = &quot;Years Coded&quot;, y = &quot;Salary&quot;)</span></span></code></pre></div>
 <p>Even though the user selected only a variable name and typed 5 words,
 that request was automatically situated in enough context for the model
 to reply only in R code that uses ggplot2 and references column names
